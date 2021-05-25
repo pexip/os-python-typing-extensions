@@ -1,3 +1,9 @@
+python-typing-extensions (3.7.4.3-1pexip1) pexip; urgency=medium
+
+  * Prepare Pexip packaging
+
+ -- Huw Jones <huw@pexip.com>  Tue, 25 May 2021 12:38:16 +0100
+
 python-typing-extensions (3.7.4.3-1) unstable; urgency=medium
 
   [ Michael R. Crusoe ]
