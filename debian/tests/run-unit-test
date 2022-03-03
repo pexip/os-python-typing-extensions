@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+pkg=python3-typing-extensions
+if [ "$AUTOPKGTEST_TMP" = "" ] ; then
+	AUTOPKGTEST_TMP=$(mktemp -d /tmp/${pkg}-test.XXXXXX)
+fi
+cd "$AUTOPKGTEST_TMP"
+cp /usr/share/doc/${pkg}/examples/test_typing_extensions.py ./
+cp $(dpkg -L ${pkg} | grep /typing_extensions.py$) ./
+python3 test_typing_extensions.py -v
