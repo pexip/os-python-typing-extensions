@@ -1,3 +1,9 @@
+python-typing-extensions (3.10.0.2-1~bpo11+1pexip1) pexip-bullseye; urgency=medium
+
+  * New upstream version for Pexos.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Tue, 19 Jul 2022 19:52:04 +0100
+
 python-typing-extensions (3.10.0.2-1~bpo11+1) bullseye-backports; urgency=medium
 
   * Rebuild for bullseye-backports.
