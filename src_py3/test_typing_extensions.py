@@ -7,13 +7,14 @@ import pickle
 import subprocess
 import types
 from unittest import TestCase, main, skipUnless, skipIf
-from typing import TypeVar, Optional
+from typing import TypeVar, Optional, Union
 from typing import T, KT, VT  # Not in __all__.
-from typing import Tuple, List, Dict, Iterator
+from typing import Tuple, List, Dict, Iterator, Callable
 from typing import Generic
 from typing import no_type_check
 from typing_extensions import NoReturn, ClassVar, Final, IntVar, Literal, Type, NewType, TypedDict
-from typing_extensions import TypeAlias
+from typing_extensions import TypeAlias, ParamSpec, Concatenate, ParamSpecArgs, ParamSpecKwargs, TypeGuard
+
 try:
     from typing_extensions import Protocol, runtime, runtime_checkable
 except ImportError:
@@ -51,6 +52,8 @@ TYPING_LATEST = sys.version_info[:3] < (3, 5, 0)
 TYPING_3_5_1 = TYPING_LATEST or sys.version_info[:3] >= (3, 5, 1)
 TYPING_3_5_3 = TYPING_LATEST or sys.version_info[:3] >= (3, 5, 3)
 TYPING_3_6_1 = TYPING_LATEST or sys.version_info[:3] >= (3, 6, 1)
+TYPING_3_10_0 = TYPING_LATEST or sys.version_info[:3] >= (3, 10, 0)
+TYPING_3_11_0 = TYPING_LATEST or sys.version_info[:3] >= (3, 11, 0)
 
 # For typing versions where issubclass(...) and
 # isinstance(...) checks are forbidden.
@@ -464,6 +467,10 @@ class GetTypeHintTests(BaseTestCase):
     @skipUnless(PY36, 'Python 3.6 required')
     def test_get_type_hints_modules(self):
         ann_module_type_hints = {1: 2, 'f': Tuple[int, int], 'x': int, 'y': str}
+        if (TYPING_3_11_0
+                or (TYPING_3_10_0 and sys.version_info.releaselevel in {'candidate', 'final'})):
+            # More tests were added in 3.10rc1.
+            ann_module_type_hints['u'] = int | float
         self.assertEqual(gth(ann_module), ann_module_type_hints)
         self.assertEqual(gth(ann_module2), {})
         self.assertEqual(gth(ann_module3), {})
@@ -515,6 +522,80 @@ class GetTypeHintTests(BaseTestCase):
         self.assertEqual(gth(Loop, globals())['attr'], Final[Loop])
         self.assertNotEqual(gth(Loop, globals())['attr'], Final[int])
         self.assertNotEqual(gth(Loop, globals())['attr'], Final)
+
+
+@skipUnless(PEP_560, "Python 3.7+ required")
+class GetUtilitiesTestCase(TestCase):
+    def test_get_origin(self):
+        from typing_extensions import get_origin
+
+        T = TypeVar('T')
+        P = ParamSpec('P')
+        class C(Generic[T]): pass
+        self.assertIs(get_origin(C[int]), C)
+        self.assertIs(get_origin(C[T]), C)
+        self.assertIs(get_origin(int), None)
+        self.assertIs(get_origin(ClassVar[int]), ClassVar)
+        self.assertIs(get_origin(Union[int, str]), Union)
+        self.assertIs(get_origin(Literal[42, 43]), Literal)
+        self.assertIs(get_origin(Final[List[int]]), Final)
+        self.assertIs(get_origin(Generic), Generic)
+        self.assertIs(get_origin(Generic[T]), Generic)
+        self.assertIs(get_origin(List[Tuple[T, T]][int]), list)
+        self.assertIs(get_origin(Annotated[T, 'thing']), Annotated)
+        self.assertIs(get_origin(List), list)
+        self.assertIs(get_origin(Tuple), tuple)
+        self.assertIs(get_origin(Callable), collections.abc.Callable)
+        if sys.version_info >= (3, 9):
+            self.assertIs(get_origin(list[int]), list)
+        self.assertIs(get_origin(list), None)
+        self.assertIs(get_origin(P.args), P)
+        self.assertIs(get_origin(P.kwargs), P)
+
+    def test_get_args(self):
+        from typing_extensions import get_args
+
+        T = TypeVar('T')
+        class C(Generic[T]): pass
+        self.assertEqual(get_args(C[int]), (int,))
+        self.assertEqual(get_args(C[T]), (T,))
+        self.assertEqual(get_args(int), ())
+        self.assertEqual(get_args(ClassVar[int]), (int,))
+        self.assertEqual(get_args(Union[int, str]), (int, str))
+        self.assertEqual(get_args(Literal[42, 43]), (42, 43))
+        self.assertEqual(get_args(Final[List[int]]), (List[int],))
+        self.assertEqual(get_args(Union[int, Tuple[T, int]][str]),
+                         (int, Tuple[str, int]))
+        self.assertEqual(get_args(typing.Dict[int, Tuple[T, T]][Optional[int]]),
+                         (int, Tuple[Optional[int], Optional[int]]))
+        self.assertEqual(get_args(Callable[[], T][int]), ([], int))
+        self.assertEqual(get_args(Callable[..., int]), (..., int))
+        self.assertEqual(get_args(Union[int, Callable[[Tuple[T, ...]], str]]),
+                         (int, Callable[[Tuple[T, ...]], str]))
+        self.assertEqual(get_args(Tuple[int, ...]), (int, ...))
+        self.assertEqual(get_args(Tuple[()]), ((),))
+        self.assertEqual(get_args(Annotated[T, 'one', 2, ['three']]), (T, 'one', 2, ['three']))
+        self.assertEqual(get_args(List), ())
+        self.assertEqual(get_args(Tuple), ())
+        self.assertEqual(get_args(Callable), ())
+        if sys.version_info >= (3, 9):
+            self.assertEqual(get_args(list[int]), (int,))
+        self.assertEqual(get_args(list), ())
+        if sys.version_info >= (3, 9):
+            # Support Python versions with and without the fix for
+            # https://bugs.python.org/issue42195
+            # The first variant is for 3.9.2+, the second for 3.9.0 and 1
+            self.assertIn(get_args(collections.abc.Callable[[int], str]),
+                          (([int], str), ([[int]], str)))
+            self.assertIn(get_args(collections.abc.Callable[[], str]),
+                          (([], str), ([[]], str)))
+            self.assertEqual(get_args(collections.abc.Callable[..., str]), (..., str))
+        P = ParamSpec('P')
+        # In 3.9 and lower we use typing_extensions's hacky implementation
+        # of ParamSpec, which gets incorrectly wrapped in a list
+        self.assertIn(get_args(Callable[P, int]), [(P, int), ([P], int)])
+        self.assertEqual(get_args(Callable[Concatenate[int, P], int]),
+                         (Concatenate[int, P], int))
 
 
 class CollectionsAbcTests(BaseTestCase):
@@ -608,6 +689,30 @@ class CollectionsAbcTests(BaseTestCase):
         self.assertIsSubclass(MyDefDict, collections.defaultdict)
         if TYPING_3_5_3:
             self.assertNotIsSubclass(collections.defaultdict, MyDefDict)
+
+    @skipUnless(CAN_INSTANTIATE_COLLECTIONS, "Behavior added in typing 3.6.1")
+    def test_ordereddict_instantiation(self):
+        self.assertIs(
+            type(typing_extensions.OrderedDict()),
+            collections.OrderedDict)
+        self.assertIs(
+            type(typing_extensions.OrderedDict[KT, VT]()),
+            collections.OrderedDict)
+        self.assertIs(
+            type(typing_extensions.OrderedDict[str, int]()),
+            collections.OrderedDict)
+
+    def test_ordereddict_subclass(self):
+
+        class MyOrdDict(typing_extensions.OrderedDict[str, int]):
+            pass
+
+        od = MyOrdDict()
+        self.assertIsInstance(od, MyOrdDict)
+
+        self.assertIsSubclass(MyOrdDict, collections.OrderedDict)
+        if TYPING_3_5_3:
+            self.assertNotIsSubclass(collections.OrderedDict, MyOrdDict)
 
     def test_chainmap_instantiation(self):
         self.assertIs(type(typing_extensions.ChainMap()), collections.ChainMap)
@@ -1240,8 +1345,9 @@ if HAVE_PROTOCOLS:
             self.assertIsSubclass(P, PR)
             with self.assertRaises(TypeError):
                 PR[int]
-            with self.assertRaises(TypeError):
-                PR[int, 1]
+            if not TYPING_3_10_0:
+                with self.assertRaises(TypeError):
+                    PR[int, 1]
             class P1(Protocol, Generic[T]):
                 def bar(self, x: T) -> str: ...
             class P2(Generic[T], Protocol):
@@ -1254,7 +1360,7 @@ if HAVE_PROTOCOLS:
                 def bar(self, x: str) -> str:
                     return x
             self.assertIsInstance(Test(), PSub)
-            if TYPING_3_5_3:
+            if TYPING_3_5_3 and not TYPING_3_10_0:
                 with self.assertRaises(TypeError):
                     PR[int, ClassVar]
 
@@ -1421,6 +1527,15 @@ if HAVE_PROTOCOLS:
             self.assertIsSubclass(B, Custom)
             self.assertNotIsSubclass(A, Custom)
 
+        def test_no_init_same_for_different_protocol_implementations(self):
+            class CustomProtocolWithoutInitA(Protocol):
+                pass
+
+            class CustomProtocolWithoutInitB(Protocol):
+                pass
+
+            self.assertEqual(CustomProtocolWithoutInitA.__init__, CustomProtocolWithoutInitB.__init__)
+
 
 class TypedDictTests(BaseTestCase):
 
@@ -1494,7 +1609,7 @@ class TypedDictTests(BaseTestCase):
 
     def test_typeddict_errors(self):
         Emp = TypedDict('Emp', {'name': str, 'id': int})
-        if sys.version_info[:2] >= (3, 9):
+        if sys.version_info >= (3, 9, 2):
             self.assertEqual(TypedDict.__module__, 'typing')
         else:
             self.assertEqual(TypedDict.__module__, 'typing_extensions')
@@ -1516,7 +1631,7 @@ class TypedDictTests(BaseTestCase):
     def test_py36_class_syntax_usage(self):
         self.assertEqual(LabelPoint2D.__name__, 'LabelPoint2D')
         self.assertEqual(LabelPoint2D.__module__, __name__)
-        self.assertEqual(LabelPoint2D.__annotations__, {'x': int, 'y': int, 'label': str})
+        self.assertEqual(get_type_hints(LabelPoint2D), {'x': int, 'y': int, 'label': str})
         self.assertEqual(LabelPoint2D.__bases__, (dict,))
         self.assertEqual(LabelPoint2D.__total__, True)
         self.assertNotIsSubclass(LabelPoint2D, typing.Sequence)
@@ -1550,11 +1665,15 @@ class TypedDictTests(BaseTestCase):
         self.assertEqual(D(), {})
         self.assertEqual(D(x=1), {'x': 1})
         self.assertEqual(D.__total__, False)
+        self.assertEqual(D.__required_keys__, frozenset())
+        self.assertEqual(D.__optional_keys__, {'x'})
 
         if PY36:
             self.assertEqual(Options(), {})
             self.assertEqual(Options(log_level=2), {'log_level': 2})
             self.assertEqual(Options.__total__, False)
+            self.assertEqual(Options.__required_keys__, frozenset())
+            self.assertEqual(Options.__optional_keys__, {'log_level', 'log_path'})
 
     @skipUnless(PY36, 'Python 3.6 required')
     def test_optional_keys(self):
@@ -1565,11 +1684,11 @@ class TypedDictTests(BaseTestCase):
     def test_keys_inheritance(self):
         assert BaseAnimal.__required_keys__ == frozenset(['name'])
         assert BaseAnimal.__optional_keys__ == frozenset([])
-        assert BaseAnimal.__annotations__ == {'name': str}
+        assert get_type_hints(BaseAnimal) == {'name': str}
 
         assert Animal.__required_keys__ == frozenset(['name'])
         assert Animal.__optional_keys__ == frozenset(['tail', 'voice'])
-        assert Animal.__annotations__ == {
+        assert get_type_hints(Animal) == {
             'name': str,
             'tail': bool,
             'voice': str,
@@ -1577,7 +1696,7 @@ class TypedDictTests(BaseTestCase):
 
         assert Cat.__required_keys__ == frozenset(['name', 'fur_color'])
         assert Cat.__optional_keys__ == frozenset(['tail', 'voice'])
-        assert Cat.__annotations__ == {
+        assert get_type_hints(Cat) == {
             'fur_color': str,
             'name': str,
             'tail': bool,
@@ -1872,6 +1991,209 @@ class TypeAliasTests(BaseTestCase):
         with self.assertRaises(TypeError):
             TypeAlias[int]
 
+class ParamSpecTests(BaseTestCase):
+
+    def test_basic_plain(self):
+        P = ParamSpec('P')
+        self.assertEqual(P, P)
+        self.assertIsInstance(P, ParamSpec)
+        # Should be hashable
+        hash(P)
+
+    def test_repr(self):
+        P = ParamSpec('P')
+        P_co = ParamSpec('P_co', covariant=True)
+        P_contra = ParamSpec('P_contra', contravariant=True)
+        P_2 = ParamSpec('P_2')
+        self.assertEqual(repr(P), '~P')
+        self.assertEqual(repr(P_2), '~P_2')
+
+        # Note: PEP 612 doesn't require these to be repr-ed correctly, but
+        # just follow CPython.
+        self.assertEqual(repr(P_co), '+P_co')
+        self.assertEqual(repr(P_contra), '-P_contra')
+
+    def test_valid_uses(self):
+        P = ParamSpec('P')
+        T = TypeVar('T')
+        C1 = typing.Callable[P, int]
+        # Callable in Python 3.5.2 might be bugged when collecting __args__.
+        # https://github.com/python/cpython/blob/91185fe0284a04162e0b3425b53be49bdbfad67d/Lib/typing.py#L1026
+        PY_3_5_2 = sys.version_info[:3] == (3, 5, 2)
+        if not PY_3_5_2:
+            self.assertEqual(C1.__args__, (P, int))
+            self.assertEqual(C1.__parameters__, (P,))
+        C2 = typing.Callable[P, T]
+        if not PY_3_5_2:
+            self.assertEqual(C2.__args__, (P, T))
+            self.assertEqual(C2.__parameters__, (P, T))
+
+
+        # Test collections.abc.Callable too.
+        if sys.version_info[:2] >= (3, 9):
+            # Note: no tests for Callable.__parameters__ here
+            # because types.GenericAlias Callable is hardcoded to search
+            # for tp_name "TypeVar" in C.  This was changed in 3.10.
+            C3 = collections.abc.Callable[P, int]
+            self.assertEqual(C3.__args__, (P, int))
+            C4 = collections.abc.Callable[P, T]
+            self.assertEqual(C4.__args__, (P, T))
+
+        # ParamSpec instances should also have args and kwargs attributes.
+        # Note: not in dir(P) because of __class__ hacks
+        self.assertTrue(hasattr(P, 'args'))
+        self.assertTrue(hasattr(P, 'kwargs'))
+
+    def test_args_kwargs(self):
+        P = ParamSpec('P')
+        # Note: not in dir(P) because of __class__ hacks
+        self.assertTrue(hasattr(P, 'args'))
+        self.assertTrue(hasattr(P, 'kwargs'))
+        self.assertIsInstance(P.args, ParamSpecArgs)
+        self.assertIsInstance(P.kwargs, ParamSpecKwargs)
+        self.assertIs(P.args.__origin__, P)
+        self.assertIs(P.kwargs.__origin__, P)
+        self.assertEqual(repr(P.args), "P.args")
+        self.assertEqual(repr(P.kwargs), "P.kwargs")
+
+    def test_user_generics(self):
+        T = TypeVar("T")
+        P = ParamSpec("P")
+        P_2 = ParamSpec("P_2")
+
+        class X(Generic[T, P]):
+            pass
+
+        G1 = X[int, P_2]
+        self.assertEqual(G1.__args__, (int, P_2))
+        self.assertEqual(G1.__parameters__, (P_2,))
+
+        G2 = X[int, Concatenate[int, P_2]]
+        self.assertEqual(G2.__args__, (int, Concatenate[int, P_2]))
+        self.assertEqual(G2.__parameters__, (P_2,))
+
+        # The following are some valid uses cases in PEP 612 that don't work:
+        # These do not work in 3.9, _type_check blocks the list and ellipsis.
+        # G3 = X[int, [int, bool]]
+        # G4 = X[int, ...]
+        # G5 = Z[[int, str, bool]]
+        # Not working because this is special-cased in 3.10.
+        # G6 = Z[int, str, bool]
+
+        class Z(Generic[P]):
+            pass
+
+    def test_pickle(self):
+        global P, P_co, P_contra
+        P = ParamSpec('P')
+        P_co = ParamSpec('P_co', covariant=True)
+        P_contra = ParamSpec('P_contra', contravariant=True)
+        for proto in range(pickle.HIGHEST_PROTOCOL):
+            with self.subTest('Pickle protocol {proto}'.format(proto=proto)):
+                for paramspec in (P, P_co, P_contra):
+                    z = pickle.loads(pickle.dumps(paramspec, proto))
+                    self.assertEqual(z.__name__, paramspec.__name__)
+                    self.assertEqual(z.__covariant__, paramspec.__covariant__)
+                    self.assertEqual(z.__contravariant__, paramspec.__contravariant__)
+                    self.assertEqual(z.__bound__, paramspec.__bound__)
+
+    def test_eq(self):
+        P = ParamSpec('P')
+        self.assertEqual(P, P)
+        self.assertEqual(hash(P), hash(P))
+        # ParamSpec should compare by id similar to TypeVar in CPython
+        self.assertNotEqual(ParamSpec('P'), P)
+        self.assertIsNot(ParamSpec('P'), P)
+        # Note: normally you don't test this as it breaks when there's
+        # a hash collision. However, ParamSpec *must* guarantee that
+        # as long as two objects don't have the same ID, their hashes
+        # won't be the same.
+        self.assertNotEqual(hash(ParamSpec('P')), hash(P))
+
+
+class ConcatenateTests(BaseTestCase):
+    def test_basics(self):
+        P = ParamSpec('P')
+
+        class MyClass: ...
+
+        c = Concatenate[MyClass, P]
+        self.assertNotEqual(c, Concatenate)
+
+    def test_valid_uses(self):
+        P = ParamSpec('P')
+        T = TypeVar('T')
+        C1 = typing.Callable[Concatenate[int, P], int]
+        C2 = typing.Callable[Concatenate[int, T, P], T]
+
+        # Test collections.abc.Callable too.
+        if sys.version_info[:2] >= (3, 9):
+            C3 = collections.abc.Callable[Concatenate[int, P], int]
+            C4 = collections.abc.Callable[Concatenate[int, T, P], T]
+
+    def test_basic_introspection(self):
+        P = ParamSpec('P')
+        C1 = Concatenate[int, P]
+        C2 = Concatenate[int, T, P]
+        self.assertEqual(C1.__origin__, Concatenate)
+        self.assertEqual(C1.__args__, (int, P))
+        self.assertEqual(C2.__origin__, Concatenate)
+        self.assertEqual(C2.__args__, (int, T, P))
+
+    def test_eq(self):
+        P = ParamSpec('P')
+        C1 = Concatenate[int, P]
+        C2 = Concatenate[int, P]
+        C3 = Concatenate[int, T, P]
+        self.assertEqual(C1, C2)
+        self.assertEqual(hash(C1), hash(C2))
+        self.assertNotEqual(C1, C3)
+
+
+class TypeGuardTests(BaseTestCase):
+    def test_basics(self):
+        TypeGuard[int]  # OK
+        self.assertEqual(TypeGuard[int], TypeGuard[int])
+
+        def foo(arg) -> TypeGuard[int]: ...
+        self.assertEqual(gth(foo), {'return': TypeGuard[int]})
+
+    def test_repr(self):
+        if hasattr(typing, 'TypeGuard'):
+            mod_name = 'typing'
+        else:
+            mod_name = 'typing_extensions'
+        self.assertEqual(repr(TypeGuard), '{}.TypeGuard'.format(mod_name))
+        cv = TypeGuard[int]
+        self.assertEqual(repr(cv), '{}.TypeGuard[int]'.format(mod_name))
+        cv = TypeGuard[Employee]
+        self.assertEqual(repr(cv), '{}.TypeGuard[{}.Employee]'.format(mod_name, __name__))
+        cv = TypeGuard[Tuple[int]]
+        self.assertEqual(repr(cv), '{}.TypeGuard[typing.Tuple[int]]'.format(mod_name))
+
+    @skipUnless(SUBCLASS_CHECK_FORBIDDEN, "Behavior added in typing 3.5.3")
+    def test_cannot_subclass(self):
+        with self.assertRaises(TypeError):
+            class C(type(TypeGuard)):
+                pass
+        with self.assertRaises(TypeError):
+            class C(type(TypeGuard[int])):
+                pass
+
+    def test_cannot_init(self):
+        with self.assertRaises(TypeError):
+            TypeGuard()
+        with self.assertRaises(TypeError):
+            type(TypeGuard)()
+        with self.assertRaises(TypeError):
+            type(TypeGuard[Optional[int]])()
+
+    def test_no_isinstance(self):
+        with self.assertRaises(TypeError):
+            isinstance(1, TypeGuard[int])
+        with self.assertRaises(TypeError):
+            issubclass(int, TypeGuard)
+
 
 class AllTests(BaseTestCase):
 
@@ -1888,6 +2210,10 @@ class AllTests(BaseTestCase):
         self.assertIn('overload', a)
         self.assertIn('Text', a)
         self.assertIn('TYPE_CHECKING', a)
+        self.assertIn('TypeAlias', a)
+        self.assertIn('ParamSpec', a)
+        self.assertIn("Concatenate", a)
+
         if TYPING_3_5_3:
             self.assertIn('Annotated', a)
         if PEP_560:
@@ -1907,6 +2233,10 @@ class AllTests(BaseTestCase):
             self.assertIn('Protocol', a)
             self.assertIn('runtime', a)
 
+        # Check that all objects in `__all__` are present in the module
+        for name in a:
+            self.assertTrue(hasattr(typing_extensions, name))
+
     def test_typing_extensions_defers_when_possible(self):
         exclude = {
             'overload',
@@ -1916,7 +2246,7 @@ class AllTests(BaseTestCase):
             'Final',
             'get_type_hints'
         }
-        if sys.version_info[:2] == (3, 8):
+        if sys.version_info < (3, 10):
             exclude |= {'get_args', 'get_origin'}
         for item in typing_extensions.__all__:
             if item not in exclude and hasattr(typing, item):

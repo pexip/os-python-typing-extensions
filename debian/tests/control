@@ -1,3 +1,0 @@
-Tests: run-unit-test
-Depends: python3-typing-extensions
-Restrictions: allow-stderr
