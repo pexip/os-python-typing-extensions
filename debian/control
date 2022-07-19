@@ -1,6 +1,7 @@
 Source: python-typing-extensions
-Maintainer: Debian Python Team <team+python@tracker.debian.org>
-Uploaders: Michael R. Crusoe <crusoe@debian.org>
+Maintainer: Pexip AS <packaging@pexip.com>
+XSBC-Pexip-Original-Maintainer: Debian Python Team <team+python@tracker.debian.org>
+XSBC-Pexip-Original-Uploaders: Michael R. Crusoe <crusoe@debian.org>
 Section: python
 Testsuite: autopkgtest-pkg-python
 Priority: optional
@@ -13,6 +14,7 @@ Vcs-Browser: https://salsa.debian.org/python-team/packages/python-typing-extensi
 Vcs-Git: https://salsa.debian.org/python-team/packages/python-typing-extensions.git
 Homepage: https://github.com/python/typing/blob/master/typing_extensions/README.rst
 Rules-Requires-Root: no
+XS-Pexip-Upstream: http://ftp.debian.org/debian/ bullseye-backports
 
 Package: python3-typing-extensions
 Architecture: all
