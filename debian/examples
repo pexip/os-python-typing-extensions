@@ -1,1 +1,2 @@
-src_py3/test_typing_extensions.py
+src/test_typing_extensions.py
+src/_typed_dict_test_helper.py
