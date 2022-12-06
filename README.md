@@ -1,30 +1,3 @@
-Metadata-Version: 2.1
-Name: typing_extensions
-Version: 4.3.0
-Summary: Backported and Experimental Type Hints for Python 3.7+
-Keywords: annotations,backport,checker,checking,function,hinting,hints,type,typechecking,typehinting,typehints,typing
-Author-email: "Guido van Rossum, Jukka Lehtosalo, Łukasz Langa, Michael Lee" <levkivskyi@gmail.com>
-Requires-Python: >=3.7
-Description-Content-Type: text/markdown
-Classifier: Development Status :: 5 - Production/Stable
-Classifier: Environment :: Console
-Classifier: Intended Audience :: Developers
-Classifier: License :: OSI Approved :: Python Software Foundation License
-Classifier: Operating System :: OS Independent
-Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3 :: Only
-Classifier: Programming Language :: Python :: 3.7
-Classifier: Programming Language :: Python :: 3.8
-Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3.10
-Classifier: Topic :: Software Development
-Project-URL: Bug Tracker, https://github.com/python/typing_extensions/issues
-Project-URL: Changes, https://github.com/python/typing_extensions/blob/main/CHANGELOG.md
-Project-URL: Documentation, https://typing.readthedocs.io/
-Project-URL: Home, https://github.com/python/typing_extensions
-Project-URL: Q & A, https://github.com/python/typing/discussions
-Project-URL: Repository, https://github.com/python/typing_extensions
-
 # Typing Extensions
 
 [![Chat at https://gitter.im/python/typing](https://badges.gitter.im/python/typing.svg)](https://gitter.im/python/typing)
@@ -173,4 +146,3 @@ These types are only guaranteed to work for static type checking.
 
 To run tests, navigate into the appropriate source directory and run
 `test_typing_extensions.py`.
-
