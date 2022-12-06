@@ -14,7 +14,7 @@ Vcs-Browser: https://salsa.debian.org/python-team/packages/python-typing-extensi
 Vcs-Git: https://salsa.debian.org/python-team/packages/python-typing-extensions.git
 Homepage: https://github.com/python/typing/blob/master/typing_extensions/README.rst
 Rules-Requires-Root: no
-XS-Pexip-Upstream: http://ftp.debian.org/debian/ bullseye-backports
+XS-Pexip-Upstream: http://ftp.debian.org/debian/ bookworm
 
 Package: python3-typing-extensions
 Architecture: all
