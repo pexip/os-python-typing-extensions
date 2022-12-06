@@ -1,3 +1,29 @@
+python-typing-extensions (4.3.0-2) unstable; urgency=medium
+
+  * debian/examples
+    - install also src/_typed_dict_test_helper.py as examples, essentially
+      needed by autopkgtests
+  * debian/tests/run-unit-test
+    - install all example in the temp dir, fixing autopkgtests
+
+ -- Sandro Tosi <morph@debian.org>  Mon, 08 Aug 2022 00:27:31 -0400
+
+python-typing-extensions (4.3.0-1) unstable; urgency=medium
+
+  * New upstream release; Closes: #1004351
+  * debian/control
+    - switch to pyproject + flit
+  * debian/rules
+    - run tests from src/
+  * debian/docs
+    - install README.md, now that README.rst is no longer available
+  * debian/examples
+    - install examples from src/
+  * debian/patches/add_typed_dict_test_helper.py.patch
+    - add a file missing from PyPI tarball but needed for running tests
+
+ -- Sandro Tosi <morph@debian.org>  Mon, 08 Aug 2022 00:09:22 -0400
+
 python-typing-extensions (3.10.0.2-1~bpo11+1pexip2) pexip-bullseye; urgency=medium
 
   * Bullseye rebuild for ARM64 inclusion
