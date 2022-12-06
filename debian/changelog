@@ -1,3 +1,9 @@
+python-typing-extensions (4.3.0-2pexip1) pexip; urgency=medium
+
+  * New upstream version
+
+ -- Huw Jones <huw@pexip.com>  Tue, 06 Dec 2022 14:47:44 +0000
+
 python-typing-extensions (4.3.0-2) unstable; urgency=medium
 
   * debian/examples
