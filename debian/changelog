@@ -1,3 +1,9 @@
+python-typing-extensions (4.4.0-1) unstable; urgency=medium
+
+  * New upstream release; Closes: #1029581
+
+ -- Danilo Egea Gondolfo <danilogondolfo@gmail.com>  Thu, 26 Jan 2023 22:30:18 +0000
+
 python-typing-extensions (4.3.0-2) unstable; urgency=medium
 
   * debian/examples
