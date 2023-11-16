@@ -1,3 +1,9 @@
+python-typing-extensions (4.4.0-1pexip3) pexip-bookworm; urgency=medium
+
+  * Initial bookworm build
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 16 Nov 2023 10:26:58 +0000
+
 python-typing-extensions (4.4.0-1pexip2) pexip; urgency=medium
 
   * No-change rebuild
