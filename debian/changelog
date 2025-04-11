@@ -1,3 +1,92 @@
+python-typing-extensions (4.13.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 11 Apr 2025 10:08:44 +0100
+
+python-typing-extensions (4.13.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 07 Apr 2025 11:36:48 +0100
+
+python-typing-extensions (4.13.0-1) unstable; urgency=medium
+
+  * debian/watch: Exclude pre-releases.
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 30 Mar 2025 20:13:34 +0100
+
+python-typing-extensions (4.12.2-2) unstable; urgency=medium
+
+  * Mark as Multi-Arch: foreign (closes: #1078035).
+  * Standards-Version: 4.7.0 (no changes required).
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 06 Aug 2024 12:35:52 +0100
+
+python-typing-extensions (4.12.2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Add myself to Uploaders (closes: #1041823).
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 09 Jun 2024 20:20:05 +0100
+
+python-typing-extensions (4.12.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 04 Jun 2024 18:59:26 +0100
+
+python-typing-extensions (4.12.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 26 May 2024 11:39:21 +0100
+
+python-typing-extensions (4.11.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 16 May 2024 22:22:15 +0100
+
+python-typing-extensions (4.10.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+    - Backport recent improvements to the implementation of `Protocol`
+      (closes: #1064739).
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 05 Mar 2024 18:40:41 +0000
+
+python-typing-extensions (4.9.0-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 31 Jan 2024 14:25:10 +0100
+
+python-typing-extensions (4.7.1-2) unstable; urgency=medium
+
+  * d/control: Update description to remove confusion around the need for this
+    Python package in Python 3.5+. Closes: #978536.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 11 Sep 2023 14:39:24 +0200
+
+python-typing-extensions (4.7.1-1) unstable; urgency=medium
+
+  * New upstream release, needed by fastapi/0.100.0
+  * debian/patches/add_typed_dict_test_helper.py.patch
+    - drop patch, merged upstream
+  * debian/control
+    - bump Standards-Version to 4.6.2 (no changes needed)
+    - update Homepage to the project new location
+  * debian/upstream/metadata
+    - update links to the new repo location
+
+ -- Sandro Tosi <morph@debian.org>  Sun, 23 Jul 2023 19:10:29 -0400
+
 python-typing-extensions (4.4.0-1) unstable; urgency=medium
 
   * New upstream release; Closes: #1029581
