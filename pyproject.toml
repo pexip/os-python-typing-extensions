@@ -1,16 +1,17 @@
 # Build system requirements.
 [build-system]
-requires = ["flit_core >=3.4,<4"]
+requires = ["flit_core >=3.11,<4"]
 build-backend = "flit_core.buildapi"
 
 # Project metadata
 [project]
 name = "typing_extensions"
-version = "4.4.0"
-description = "Backported and Experimental Type Hints for Python 3.7+"
+version = "4.13.2"
+description = "Backported and Experimental Type Hints for Python 3.8+"
 readme = "README.md"
-requires-python = ">=3.7"
-license = { file = "LICENSE" }
+requires-python = ">=3.8"
+license = "PSF-2.0"
+license-files = ["LICENSE"]
 keywords = [
     "annotations",
     "backport",
@@ -30,14 +31,15 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Python Software Foundation License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development",
 ]
 
@@ -45,7 +47,7 @@ classifiers = [
 Home = "https://github.com/python/typing_extensions"
 Repository = "https://github.com/python/typing_extensions"
 Changes = "https://github.com/python/typing_extensions/blob/main/CHANGELOG.md"
-Documentation = "https://typing.readthedocs.io/"
+Documentation = "https://typing-extensions.readthedocs.io/"
 "Bug Tracker" = "https://github.com/python/typing_extensions/issues"
 "Q & A" = "https://github.com/python/typing/discussions"
 
@@ -56,5 +58,56 @@ name = "Guido van Rossum, Jukka Lehtosalo, Łukasz Langa, Michael Lee"
 email = "levkivskyi@gmail.com"
 
 [tool.flit.sdist]
-include = ["CHANGELOG.md", "README.md", "*/test*.py"]
+include = ["CHANGELOG.md", "README.md", "tox.ini", "*/*test*.py"]
 exclude = []
+
+[tool.ruff]
+line-length = 90
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+    "B",
+    "C4",
+    "E",
+    "F",
+    "I",
+    "ISC001",
+    "PGH004",
+    "RUF",
+    "SIM201",
+    "SIM202",
+    "UP",
+    "W",
+]
+
+ignore = [
+    # Ignore various "modernization" rules that tell you off for importing/using
+    # deprecated things from the typing module, etc.
+    "UP006",
+    "UP007",
+    "UP013",
+    "UP014",
+    "UP019",
+    "UP035",
+    "UP038",
+    # Not relevant here
+    "RUF012",
+    "RUF022",
+    "RUF023",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"!src/typing_extensions.py" = [
+    "B018",
+    "B024",
+    "C4",
+    "E302",
+    "E306",
+    "E501",
+    "E701",
+]
+
+[tool.ruff.lint.isort]
+extra-standard-library = ["tomllib"]
+known-first-party = ["typing_extensions", "_typed_dict_test_helper"]
