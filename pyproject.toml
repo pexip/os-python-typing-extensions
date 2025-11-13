@@ -6,10 +6,10 @@ build-backend = "flit_core.buildapi"
 # Project metadata
 [project]
 name = "typing_extensions"
-version = "4.13.2"
-description = "Backported and Experimental Type Hints for Python 3.8+"
+version = "4.15.0"
+description = "Backported and Experimental Type Hints for Python 3.9+"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = "PSF-2.0"
 license-files = ["LICENSE"]
 keywords = [
@@ -34,12 +34,12 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development",
 ]
 
@@ -63,7 +63,7 @@ exclude = []
 
 [tool.ruff]
 line-length = 90
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = [
@@ -91,10 +91,16 @@ ignore = [
     "UP019",
     "UP035",
     "UP038",
+    "UP045",  # X | None instead of Optional[X]
     # Not relevant here
-    "RUF012",
-    "RUF022",
-    "RUF023",
+    "RUF012",  # Use ClassVar for mutables
+    "RUF022",  # Unsorted __all__
+    "RUF023",  # Unsorted __slots__
+    "B903",  # Use dataclass / namedtuple
+    "RUF031",  # parentheses for tuples in subscripts
+    # Ruff doesn't understand the globals() assignment; we test __all__
+    # directly in test_all_names_in___all__.
+    "F822",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -106,8 +112,23 @@ ignore = [
     "E306",
     "E501",
     "E701",
+    # Harmful for tests if applied.
+    "RUF036",  # None not at end of Union
+    "RUF041",  # nested Literal
 ]
 
 [tool.ruff.lint.isort]
 extra-standard-library = ["tomllib"]
 known-first-party = ["typing_extensions", "_typed_dict_test_helper"]
+
+[tool.coverage.report]
+fail_under = 96
+show_missing = true
+# Omit files that are created in temporary directories during tests.
+# If not explicitly omitted they will result in warnings in the report.
+omit = ["inspect*", "ann*"]
+ignore_errors = true
+exclude_also = [
+    # Exclude placeholder function and class bodies.
+    '^\s*((async )?def|class) .*:\n\s*(pass|raise NotImplementedError)',
+]
