@@ -1,3 +1,9 @@
+python-typing-extensions (4.15.0-1+pexip25u2) pexip-trixie; urgency=medium
+
+  * Trixie build for product distribution
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 04 Dec 2025 13:57:22 +0000
+
 python-typing-extensions (4.15.0-1+pexip25u1) pexip-trixie; urgency=medium
 
   * New upstream release
