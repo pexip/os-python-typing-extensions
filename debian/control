@@ -9,11 +9,10 @@ Build-Depends: debhelper-compat (= 13),
                pybuild-plugin-pyproject,
                python3-all:any,
                python3-setuptools
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Browser: https://salsa.debian.org/python-team/packages/python-typing-extensions
 Vcs-Git: https://salsa.debian.org/python-team/packages/python-typing-extensions.git
 Homepage: https://typing-extensions.readthedocs.io/en/latest/
-Rules-Requires-Root: no
 
 Package: python3-typing-extensions
 Architecture: all
